@@ -2,3 +2,4 @@ streamlit
 feedparser
 requests
 streamlit-autorefresh
+python-telegram-bot==20.3
