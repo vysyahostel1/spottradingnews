@@ -91,8 +91,6 @@ def fetch_and_display_news():
     if headlines:
         send_text_to_telegram(headlines)
         st.success("✅ News summary sent to Telegram!")
-    else:
-        st.info("📭 No new headlines found.")
 
 # 🧩 Streamlit UI
 st.set_page_config(page_title="Spot Trading – Auto News Pulse", layout="wide")
@@ -100,8 +98,8 @@ st.title("📈 Spot Trading – Daily Market Pulse")
 st.write(f"🗓️ {datetime.now().strftime('%d %b %Y, %I:%M %p')}")
 
 # 🔁 Auto-refresh setup
-refresh_minutes = st.slider("⏱️ Auto-refresh every X minutes", 1, 30, 5)
-st_autorefresh(interval=refresh_minutes * 60 * 1000, limit=100)
+refresh_minutes = st.slider("⏱️ Auto-refresh every X seconds", 10, 600, 10)
+st_autorefresh(10)
 
 # 🧠 Session state
 if "seen" not in st.session_state:
@@ -109,3 +107,4 @@ if "seen" not in st.session_state:
 
 # 🚀 Fetch and display
 fetch_and_display_news()
+
