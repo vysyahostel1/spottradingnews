@@ -145,10 +145,4 @@ if headlines:
 else:
     st.info("No new headlines found.")
 
-    if headlines:
-        send_text_to_telegram(headlines)
-        st.success("✅ News summary sent to Telegram!")
-    else:
-        st.info("No new headlines found.")
-    time.sleep(10)    
 
