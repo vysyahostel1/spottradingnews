@@ -10,9 +10,16 @@ chat_id = st.secrets["chat_id"]
 
 # 🌐 RSS Feeds
 feeds = [
-    "https://www.moneycontrol.com/rss/news.xml",
+      "https://www.moneycontrol.com/rss/news.xml",
     "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
+    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147",
+    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=158391",
     "https://feeds.reuters.com/reuters/businessNews",
+    "https://feeds.reuters.com/reuters/marketsNews",
+    "https://www.ft.com/rss/home",
+    "https://www.investing.com/rss/news_25.rss",
+    "https://finance.yahoo.com/news/rssindex",
+    "https://www.marketwatch.com/rss/topstories",
     "https://www.business-standard.com/rss/home_page_top_stories.rss",
     "https://www.livemint.com/rss/news"
 ]
@@ -130,3 +137,4 @@ if "last_refresh" not in st.session_state:
 if datetime.now() - st.session_state.last_refresh > timedelta(minutes=refresh_minutes):
     fetch_and_display_news()
     st.session_state.last_refresh = datetime.now()
+
