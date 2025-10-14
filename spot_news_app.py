@@ -1,26 +1,20 @@
 import streamlit as st
 import feedparser
 from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
 from telegram import Bot
 from telegram.constants import ParseMode
 
-# 🔐 Telegram credentials
+# 🔐 Telegram credentials from secrets.toml
 bot_token = st.secrets["bot_token"]
 chat_id = st.secrets["chat_id"]
 bot = Bot(token=bot_token)
 
 # 🌐 RSS Feeds
 feeds = [
-     "https://www.moneycontrol.com/rss/news.xml",
+    "https://www.moneycontrol.com/rss/news.xml",
     "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
-    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147",
-    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=158391",
     "https://feeds.reuters.com/reuters/businessNews",
-    "https://feeds.reuters.com/reuters/marketsNews",
-    "https://www.ft.com/rss/home",
-    "https://www.investing.com/rss/news_25.rss",
-    "https://finance.yahoo.com/news/rssindex",
-    "https://www.marketwatch.com/rss/topstories",
     "https://www.business-standard.com/rss/home_page_top_stories.rss",
     "https://www.livemint.com/rss/news"
 ]
@@ -61,49 +55,57 @@ def send_text_to_telegram(headlines):
     except Exception as e:
         st.error(f"Telegram error: {e}")
 
+# 🔁 News Fetcher
+def fetch_and_display_news():
+    headlines = []
+    for url in feeds:
+        feed = feedparser.parse(url)
+        for entry in feed.entries[:3]:
+            headline = entry.title
+            link = entry.link
+            source = link.split("/")[2]
+            full_text = entry.get("summary", entry.get("description", ""))
+
+            if headline not in st.session_state.seen and full_text:
+                st.session_state.seen.add(headline)
+                points = summarize_to_points(full_text)
+                sentiment = detect_sentiment(full_text)
+                sector = tag_sector(full_text)
+
+                st.markdown(f"### 📰 {headline}")
+                for p in points:
+                    st.write(f"• {p}")
+                st.write(f"{sentiment} | {sector}")
+                st.markdown(f"🔗 Source: `{source}`")
+                st.markdown(f"[Read more]({link})")
+                st.divider()
+
+                headlines.append({
+                    "title": headline,
+                    "points": points,
+                    "sentiment": sentiment,
+                    "source": source,
+                    "sector": sector
+                })
+
+    if headlines:
+        send_text_to_telegram(headlines)
+        st.success("✅ News summary sent to Telegram!")
+    else:
+        st.info("📭 No new headlines found.")
+
 # 🧩 Streamlit UI
 st.set_page_config(page_title="Spot Trading – Auto News Pulse", layout="wide")
 st.title("📈 Spot Trading – Daily Market Pulse")
 st.write(f"🗓️ {datetime.now().strftime('%d %b %Y, %I:%M %p')}")
 
+# 🔁 Auto-refresh setup
+refresh_minutes = st.slider("⏱️ Auto-refresh every X minutes", 1, 30, 5)
+st_autorefresh(interval=refresh_minutes * 60 * 1000, limit=100)
+
+# 🧠 Session state
 if "seen" not in st.session_state:
     st.session_state.seen = set()
 
-headlines = []
-
-# 🔁 Fetch and display
-for url in feeds:
-    feed = feedparser.parse(url)
-    for entry in feed.entries[:3]:
-        headline = entry.title
-        link = entry.link
-        source = link.split("/")[2]
-        full_text = entry.get("summary", entry.get("description", ""))
-
-        if headline not in st.session_state.seen and full_text:
-            st.session_state.seen.add(headline)
-            points = summarize_to_points(full_text)
-            sentiment = detect_sentiment(full_text)
-            sector = tag_sector(full_text)
-
-            st.markdown(f"### 📰 {headline}")
-            for p in points:
-                st.write(f"• {p}")
-            st.write(f"{sentiment} | {sector}")
-            st.markdown(f"🔗 Source: `{source}`")
-            st.markdown(f"[Read more]({link})")
-            st.divider()
-
-            headlines.append({
-                "title": headline,
-                "points": points,
-                "sentiment": sentiment,
-                "source": source,
-                "sector": sector
-            })
-
-if headlines:
-    send_text_to_telegram(headlines)
-    st.success("✅ News summary sent to Telegram!")
-else:
-    st.info("📭 No new headlines found.")
+# 🚀 Fetch and display
+fetch_and_display_news()
