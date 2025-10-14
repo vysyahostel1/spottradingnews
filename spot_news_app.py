@@ -123,7 +123,7 @@ st.write(f"🗓️ {datetime.now().strftime('%d %b %Y, %I:%M %p')}")
 
 # 🔁 Auto-refresh setup
 refresh_minutes = st.slider("⏱️ Auto-refresh every X minutes", 1, 30, 5)
-st_autorefresh(interval=refresh_minutes * 60 * 1000, limit=100)
+st_autorefresh(interval=refresh_minutes * 60)
 
 # 🧠 Session state
 if "seen" not in st.session_state:
@@ -135,3 +135,4 @@ if "last_refresh" not in st.session_state:
 if datetime.now() - st.session_state.last_refresh > timedelta(minutes=refresh_minutes):
     fetch_and_display_news()
     st.session_state.last_refresh = datetime.now()
+
