@@ -1,5 +1,6 @@
 import streamlit as st
 import feedparser
+import urllib.request
 from datetime import datetime, timedelta
 from streamlit_autorefresh import st_autorefresh
 from telegram import Bot
@@ -12,19 +13,22 @@ bot = Bot(token=bot_token)
 
 # 🌐 RSS Feeds
 feeds = [
-      "https://www.moneycontrol.com/rss/news.xml",
+    "https://www.moneycontrol.com/rss/news.xml",
     "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
-    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147",
-    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=158391",
     "https://feeds.reuters.com/reuters/businessNews",
-    "https://feeds.reuters.com/reuters/marketsNews",
-    "https://www.ft.com/rss/home",
-    "https://www.investing.com/rss/news_25.rss",
-    "https://finance.yahoo.com/news/rssindex",
-    "https://www.marketwatch.com/rss/topstories",
     "https://www.business-standard.com/rss/home_page_top_stories.rss",
     "https://www.livemint.com/rss/news"
 ]
+
+# 🧠 Fetch feed with custom User-Agent
+def fetch_feed(url):
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            return feedparser.parse(response.read())
+    except Exception as e:
+        st.error(f"❌ Failed to fetch {url}: {e}")
+        return feedparser.parse("")
 
 # 📊 Sentiment tagging
 def detect_sentiment(text):
@@ -69,7 +73,10 @@ def send_text_to_telegram(headlines):
         message += f"\n{h['sentiment']} | {h['sector']}\n"
         message += f"🔗 Source: {h['source']}\n\n"
 
-    bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+    try:
+        bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+    except Exception as e:
+        st.error(f"❌ Telegram error: {e}")
 
 # 🔁 News Fetcher
 def fetch_and_display_news():
@@ -77,9 +84,13 @@ def fetch_and_display_news():
     new_found = False
 
     for url in feeds:
-        feed = feedparser.parse(url)
+        feed = fetch_feed(url)
         st.write(f"🔍 Checking feed: {url}")
         st.write(f"Found {len(feed.entries)} entries")
+
+        if len(feed.entries) == 0:
+            st.warning(f"⚠️ No entries found for {url}")
+            continue
 
         for entry in feed.entries[:3]:
             headline = entry.title
@@ -123,7 +134,7 @@ st.write(f"🗓️ {datetime.now().strftime('%d %b %Y, %I:%M %p')}")
 
 # 🔁 Auto-refresh setup
 refresh_minutes = st.slider("⏱️ Auto-refresh every X minutes", 1, 30, 5)
-st_autorefresh(interval=refresh_minutes * 60)
+st_autorefresh(interval=refresh_minutes * 60 * 1000, limit=100)
 
 # 🧠 Session state
 if "seen" not in st.session_state:
@@ -135,4 +146,3 @@ if "last_refresh" not in st.session_state:
 if datetime.now() - st.session_state.last_refresh > timedelta(minutes=refresh_minutes):
     fetch_and_display_news()
     st.session_state.last_refresh = datetime.now()
-
