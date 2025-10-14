@@ -1,10 +1,10 @@
 import streamlit as st
 import feedparser
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from streamlit_autorefresh import st_autorefresh
 
-# 🔐 Telegram credentials (stored securely in secrets.toml)
+# 🔐 Telegram credentials from secrets.toml
 bot_token = st.secrets["bot_token"]
 chat_id = st.secrets["chat_id"]
 
@@ -12,14 +12,7 @@ chat_id = st.secrets["chat_id"]
 feeds = [
     "https://www.moneycontrol.com/rss/news.xml",
     "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
-    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147",
-    "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=158391",
     "https://feeds.reuters.com/reuters/businessNews",
-    "https://feeds.reuters.com/reuters/marketsNews",
-    "https://www.ft.com/rss/home",
-    "https://www.investing.com/rss/news_25.rss",
-    "https://finance.yahoo.com/news/rssindex",
-    "https://www.marketwatch.com/rss/topstories",
     "https://www.business-standard.com/rss/home_page_top_stories.rss",
     "https://www.livemint.com/rss/news"
 ]
@@ -124,12 +117,16 @@ st.title("📈 Spot Trading – Daily Market Pulse")
 st.write(f"🗓️ {datetime.now().strftime('%d %b %Y, %I:%M %p')}")
 
 # 🔁 Auto-refresh setup
-refresh_interval = st.slider("⏱️ Auto-refresh every X minutes", 1, 30, 5)
-st_autorefresh(interval=refresh_interval * 60 * 1000, limit=100)
+refresh_minutes = st.slider("⏱️ Auto-refresh every X minutes", 1, 30, 5)
+st_autorefresh(interval=refresh_minutes * 60 * 1000, limit=100)
 
 # 🧠 Session state
 if "seen" not in st.session_state:
     st.session_state.seen = set()
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = datetime.now()
 
-# 🚀 Fetch and display
-fetch_and_display_news()
+# ⏱️ Refresh logic
+if datetime.now() - st.session_state.last_refresh > timedelta(minutes=refresh_minutes):
+    fetch_and_display_news()
+    st.session_state.last_refresh = datetime.now()
