@@ -1,5 +1,5 @@
 import streamlit as st
-import feedparser
+
 import requests
 from googletrans import Translator
 from fpdf import FPDF
@@ -151,5 +151,6 @@ while True:
     if new_found:
         send_text_to_telegram(headlines)
         st.success("✅ News summary sent to Telegram!")
+
 
     time.sleep(10)
