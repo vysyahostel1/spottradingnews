@@ -1,12 +1,14 @@
 import streamlit as st
 import feedparser
-import requests
 from datetime import datetime, timedelta
 from streamlit_autorefresh import st_autorefresh
+from telegram import Bot
+from telegram.constants import ParseMode
 
 # 🔐 Telegram credentials from secrets.toml
 bot_token = st.secrets["bot_token"]
 chat_id = st.secrets["chat_id"]
+bot = Bot(token=bot_token)
 
 # 🌐 RSS Feeds
 feeds = [
@@ -67,14 +69,7 @@ def send_text_to_telegram(headlines):
         message += f"\n{h['sentiment']} | {h['sector']}\n"
         message += f"🔗 Source: {h['source']}\n\n"
 
-    requests.post(
-        f"https://api.telegram.org/bot{bot_token}/sendMessage",
-        data={
-            "chat_id": chat_id,
-            "text": message,
-            "parse_mode": "Markdown"
-        }
-    )
+    bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
 # 🔁 News Fetcher
 def fetch_and_display_news():
@@ -83,6 +78,9 @@ def fetch_and_display_news():
 
     for url in feeds:
         feed = feedparser.parse(url)
+        st.write(f"🔍 Checking feed: {url}")
+        st.write(f"Found {len(feed.entries)} entries")
+
         for entry in feed.entries[:3]:
             headline = entry.title
             link = entry.link
@@ -137,4 +135,3 @@ if "last_refresh" not in st.session_state:
 if datetime.now() - st.session_state.last_refresh > timedelta(minutes=refresh_minutes):
     fetch_and_display_news()
     st.session_state.last_refresh = datetime.now()
-
