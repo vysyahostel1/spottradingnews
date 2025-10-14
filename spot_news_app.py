@@ -1,8 +1,6 @@
 import streamlit as st
 import feedparser
 import requests
-from googletrans import Translator
-from fpdf import FPDF
 from datetime import datetime
 import time
 
@@ -154,4 +152,5 @@ while True:
 
 
     time.sleep(10)
+
 
