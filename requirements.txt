@@ -3,4 +3,7 @@ feedparser
 requests
 streamlit-autorefresh
 python-telegram-bot==20.3
+flask
+qiskit
 qiskit-aer==0.12.2
+
