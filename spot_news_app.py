@@ -6,8 +6,8 @@ from telegram import Bot
 from telegram.constants import ParseMode
 
 # 🔐 Telegram credentials from secrets.toml
-bot_token = st.secrets["8376336695"]
-chat_id = st.secrets["AAFi53oaoUDQK-SF0I6U0of G4r1jGQa8cnc"]
+bot_token = st.secrets["bot_token"]
+chat_id   = st.secrets["chat_id"]
 bot = Bot(token=bot_token)
 
 # 🌐 RSS Feeds
